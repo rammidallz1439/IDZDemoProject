@@ -21,6 +21,8 @@ namespace IDZ.Game
         {
             arrow.transform.SetParent(slot.transform);
             arrow.transform.localPosition = Vector3.zero;
+            arrow.transform.GetComponent<CanvasGroup>().blocksRaycasts = true;
+            arrow.isSelected = true;
         }
 
         public void Undo()

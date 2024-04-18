@@ -7,7 +7,7 @@ namespace IDZ.Game
     public class SequencingModel : IModel
     {
         private List<ArrowDirection> sequence = new List<ArrowDirection>();
-        private List<ArrowDirection> goalSequence = new List<ArrowDirection>();
+       private List<ArrowDirection> goalSequence = new List<ArrowDirection>();
 
         public void SetGoalSequence(List<ArrowDirection> goal)
         {
@@ -19,6 +19,10 @@ namespace IDZ.Game
             sequence.Add(direction);
         }
 
+        public void ClearSequenceAt(int index)
+        {
+            sequence.RemoveAt(index);
+        }
         public void ClearSequence()
         {
             sequence.Clear();

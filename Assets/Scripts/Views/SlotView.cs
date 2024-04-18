@@ -6,7 +6,7 @@ namespace IDZ.Game
     public class SlotView : MonoBehaviour, IDropHandler, IView
     {
         private SequencingController controller;
-
+        public bool filled;
     
         public void Initialize(SequencingController controller)
         {
@@ -18,9 +18,13 @@ namespace IDZ.Game
             ArrowView arrow = eventData.pointerDrag.GetComponent<ArrowView>();
             if (arrow != null)
             {
-                controller.OnArrowDropped(arrow, this);
+                filled=true;
+                eventData.pointerDrag.GetComponent<RectTransform>().position=arrow.originalPos;
+                GameObject go=Instantiate(arrow.gameObject,transform);
+                controller.OnArrowDropped(go.GetComponent<ArrowView>(), this);
             }
         }
+
     }
 }
 

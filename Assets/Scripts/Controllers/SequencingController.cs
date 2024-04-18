@@ -1,20 +1,25 @@
 using System.Collections.Generic;
 using System.Windows.Input;
 using UnityEngine;
-
+using DG;
+using DG.Tweening;
+using System.Collections;
+using System;
 namespace IDZ.Game
 {
     public class SequencingController : MonoBehaviour
     {
-        public GameObject pencilUI;
+        public Transform pencilUI;
         public GameObject linePrefab;
         public SlotView[] slots;
         public ArrowView[] arrowViews;
         public List<ArrowDirection> goalSequence;
+        public IModel model;
 
-        private IModel model;
+
         private List<ICommand> commandBuffer = new List<ICommand>();
-
+        [SerializeField] private Transform[] puzzleDots;
+        [SerializeField] private int currentIndex;
         void Start()
         {
             model = new SequencingModel();
@@ -46,25 +51,25 @@ namespace IDZ.Game
             if (commandBuffer.Count > 0)
             {
                 ICommand lastCommand = commandBuffer[commandBuffer.Count - 1];
-                lastCommand.Execute(); // Implement Undo logic in each command if needed
+                lastCommand.Execute();
                 commandBuffer.RemoveAt(commandBuffer.Count - 1);
             }
         }
 
         public void OnOkButtonClick()
         {
-            MovePencil();
-            DrawLines();
+            StartCoroutine(MovePencil());
+            //DrawLines();
 
             if (model.CheckWinCondition())
             {
                 Debug.Log("You win!");
-                // Implement win condition logic, such as showing a win screen or advancing to the next level
+
             }
             else
             {
                 Debug.Log("Try again!");
-                // Implement lose condition logic, such as showing a lose screen or resetting the game
+
             }
 
             commandBuffer.Clear();
@@ -72,41 +77,43 @@ namespace IDZ.Game
 
         public void OnArrowDropped(ArrowView arrow, SlotView slot)
         {
-            // Clear the slot before adding the arrow
-            foreach (SlotView s in slots)
-            {
-                if (s != slot && s.transform.childCount > 0)
-                {
-                    Destroy(s.transform.GetChild(0).gameObject);
-                }
-            }
-
             arrow.transform.SetParent(slot.transform);
             ICommand command = new AddArrowToSlotCommand(arrow, slot);
             ExecuteCommand(command);
+            model.AddToSequence(arrow.Direction);
         }
-        private void MovePencil()
+        private IEnumerator MovePencil()
         {
-            Vector3 currentPosition = pencilUI.transform.position;
+            Vector3 destination;
+
             foreach (ArrowDirection direction in model.GetSequence())
             {
                 switch (direction)
                 {
                     case ArrowDirection.Up:
-                        currentPosition += Vector3.up;
+                        pencilUI.DOMoveY(puzzleDots[currentIndex - 4].transform.position.y + 0.1f, 0.7f).WaitForCompletion();
+                        // DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex - 4].transform.position);
+                        currentIndex = currentIndex - 4;
                         break;
                     case ArrowDirection.Down:
-                        currentPosition += Vector3.down;
+                        pencilUI.DOMoveY(puzzleDots[currentIndex + 4].transform.position.y +0.1f , 0.7f).WaitForCompletion();
+                        //  DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex + 4].transform.position);
+                        currentIndex = currentIndex + 4;
                         break;
                     case ArrowDirection.Left:
-                        currentPosition += Vector3.left;
+                        pencilUI.DOMoveX(puzzleDots[currentIndex + 1].transform.position.x + 0.1f, 0.7f).WaitForCompletion();
+                        //  DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex + 1].transform.position);
+                        currentIndex = currentIndex + 1;
                         break;
                     case ArrowDirection.Right:
-                        currentPosition += Vector3.right;
+                        pencilUI.DOMoveX(puzzleDots[currentIndex - 1].transform.position.x + 0.1f, 0.7f).WaitForCompletion();
+                        //  DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex - 1].transform.position);
+                        currentIndex = currentIndex - 1;
                         break;
                 }
+                yield return new WaitForSeconds(0.5f);
             }
-            pencilUI.transform.position = currentPosition;
+
         }
 
         private void DrawLines()
@@ -116,6 +123,8 @@ namespace IDZ.Game
             {
                 Destroy(child.gameObject);
             }
+
+
 
             // Draw lines between arrows
             for (int i = 0; i < slots.Length - 1; i++)
@@ -136,7 +145,7 @@ namespace IDZ.Game
 
         private void DrawLine(Vector3 startPos, Vector3 endPos)
         {
-            GameObject line = Instantiate(linePrefab, transform);
+            GameObject line = Instantiate(linePrefab, startPos, Quaternion.identity);
             LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
             lineRenderer.positionCount = 2;
             lineRenderer.SetPosition(0, startPos);

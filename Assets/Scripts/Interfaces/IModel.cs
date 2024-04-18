@@ -8,6 +8,7 @@ namespace IDZ.Game
         void SetGoalSequence(List<ArrowDirection> goal);
         void AddToSequence(ArrowDirection direction);
         void ClearSequence();
+        void ClearSequenceAt(int index);
         List<ArrowDirection> GetSequence();
         bool CheckWinCondition();
     }
