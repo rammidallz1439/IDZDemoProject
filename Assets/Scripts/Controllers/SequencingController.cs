@@ -13,18 +13,26 @@ namespace IDZ.Game
         public GameObject linePrefab;
         public SlotView[] slots;
         public ArrowView[] arrowViews;
+        public LoopView[] loopViews;
+        public List<LoopingViewHolder> loopViewHolders;
         public List<ArrowDirection> goalSequence;
         public IModel model;
-
+        public GameType gameType;
+        public LoopingViewHolder loopingviewPrefab = null;
+        public int loopCount = 1;
 
         private List<ICommand> commandBuffer = new List<ICommand>();
         [SerializeField] private Transform[] puzzleDots;
         [SerializeField] private int currentIndex;
-        void Start()
+        [SerializeField] private int loopsToWin = 0;
+        [SerializeField] private GameObject loopingHolder = null;
+
+        void OnEnable()
         {
             model = new SequencingModel();
             ((SequencingModel)model).SetGoalSequence(goalSequence);
             InitializeViews();
+
         }
 
         private void InitializeViews()
@@ -33,11 +41,22 @@ namespace IDZ.Game
             {
                 arrowView.Initialize(this);
             }
-
-            foreach (SlotView slotView in slots)
+            if (slots != null)
             {
-                slotView.Initialize(this);
+                foreach (SlotView slotView in slots)
+                {
+                    slotView.Initialize(this);
+                }
             }
+            if (loopViews != null)
+            {
+                foreach (LoopView loopView in loopViews)
+                {
+                    loopView.Initialize(this);
+                }
+            }
+
+
         }
 
         public void ExecuteCommand(ICommand command)
@@ -58,20 +77,29 @@ namespace IDZ.Game
 
         public void OnOkButtonClick()
         {
-            StartCoroutine(MovePencil());
+           
             //DrawLines();
-
-            if (model.CheckWinCondition())
+            if(gameType == GameType.Looping)
             {
-                Debug.Log("You win!");
-
+                foreach(LoopingViewHolder loopView in loopViewHolders)
+                {
+                    for (int i = 0; i < loopView.direction.Count; i++)
+                    {
+                        model.AddToSequence(loopView.direction[i]);
+                    }
+                  
+                }
+               
             }
-            else
+
+            StartCoroutine(MovePencil());
+
+            if (!model.CheckWinCondition())
             {
                 Debug.Log("Try again!");
+                GameSceneManager.SwitchNextButtonevent?.Invoke();
 
             }
-
             commandBuffer.Clear();
         }
 
@@ -91,103 +119,58 @@ namespace IDZ.Game
                 switch (direction)
                 {
                     case ArrowDirection.Up:
-                        pencilUI.DOMoveY(puzzleDots[currentIndex - 4].transform.position.y + 0.1f, 0.7f).WaitForCompletion();
-                        // DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex - 4].transform.position);
+                        DrawLine(puzzleDots[currentIndex].transform, new Vector3(0, 140, 0));
+                        pencilUI.DOMoveY(puzzleDots[currentIndex - 4].transform.position.y - 0.1f, 0.7f).WaitForCompletion();
                         currentIndex = currentIndex - 4;
                         break;
                     case ArrowDirection.Down:
-                        pencilUI.DOMoveY(puzzleDots[currentIndex + 4].transform.position.y +0.1f , 0.7f).WaitForCompletion();
-                        //  DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex + 4].transform.position);
+                        DrawLine(puzzleDots[currentIndex].transform, new Vector3(0, -140, 0));
+                        pencilUI.DOMoveY(puzzleDots[currentIndex + 4].transform.position.y + 0.1f, 0.7f).WaitForCompletion();
                         currentIndex = currentIndex + 4;
                         break;
                     case ArrowDirection.Left:
-                        pencilUI.DOMoveX(puzzleDots[currentIndex + 1].transform.position.x + 0.1f, 0.7f).WaitForCompletion();
-                        //  DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex + 1].transform.position);
-                        currentIndex = currentIndex + 1;
+                        if (currentIndex != 3 && currentIndex != 7 && currentIndex != 11 && currentIndex != 15)
+                        {
+                            DrawLine(puzzleDots[currentIndex].transform, new Vector3(120, 0, 0));
+                            pencilUI.DOMoveX(puzzleDots[currentIndex + 1].transform.position.x + 0.1f, 0.7f).WaitForCompletion();
+                            currentIndex = currentIndex + 1;
+                        }
                         break;
                     case ArrowDirection.Right:
-                        pencilUI.DOMoveX(puzzleDots[currentIndex - 1].transform.position.x + 0.1f, 0.7f).WaitForCompletion();
-                        //  DrawLine(puzzleDots[currentIndex].transform.position, puzzleDots[currentIndex - 1].transform.position);
-                        currentIndex = currentIndex - 1;
+                        if(currentIndex != 0 && currentIndex != 4 && currentIndex != 8 && currentIndex != 12)
+                        {
+                            DrawLine(puzzleDots[currentIndex].transform, new Vector3(-120, 0, 0));
+                            pencilUI.DOMoveX(puzzleDots[currentIndex - 1].transform.position.x + 0.1f, 0.7f).WaitForCompletion();
+                            currentIndex = currentIndex - 1;
+                        }
+                      
                         break;
                 }
                 yield return new WaitForSeconds(0.5f);
             }
-
+            yield return new WaitForSeconds(0.8f);
+            GameSceneManager.ResultPopupEvent?.Invoke(model.CheckWinCondition());
         }
 
-        private void DrawLines()
+
+        private void DrawLine(Transform startPos, Vector3 endPos)
         {
-            // Clear previous lines
-            foreach (Transform child in transform)
-            {
-                Destroy(child.gameObject);
-            }
-
-
-
-            // Draw lines between arrows
-            for (int i = 0; i < slots.Length - 1; i++)
-            {
-                if (slots[i].transform.childCount > 0 && slots[i + 1].transform.childCount > 0)
-                {
-                    ArrowView arrow = slots[i].transform.GetChild(0).GetComponent<ArrowView>();
-                    ArrowView nextArrow = slots[i + 1].transform.GetChild(0).GetComponent<ArrowView>();
-                    if (arrow != null && nextArrow != null)
-                    {
-                        Vector3 startPosition = GetArrowEndPosition(arrow);
-                        Vector3 endPosition = GetArrowStartPosition(nextArrow);
-                        DrawLine(startPosition, endPosition);
-                    }
-                }
-            }
-        }
-
-        private void DrawLine(Vector3 startPos, Vector3 endPos)
-        {
-            GameObject line = Instantiate(linePrefab, startPos, Quaternion.identity);
+            GameObject line = Instantiate(linePrefab, startPos);
+            line.transform.position = startPos.position;
             LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
             lineRenderer.positionCount = 2;
-            lineRenderer.SetPosition(0, startPos);
+            lineRenderer.SetPosition(0, startPos.position);
             lineRenderer.SetPosition(1, endPos);
-        }
 
-        private Vector3 GetArrowEndPosition(ArrowView arrow)
-        {
-            switch (arrow.Direction)
-            {
-                case ArrowDirection.Up:
-                    return arrow.transform.position + Vector3.up * 0.5f;
-                case ArrowDirection.Down:
-                    return arrow.transform.position + Vector3.down * 0.5f;
-                case ArrowDirection.Left:
-                    return arrow.transform.position + Vector3.left * 0.5f;
-                case ArrowDirection.Right:
-                    return arrow.transform.position + Vector3.right * 0.5f;
-                default:
-                    return arrow.transform.position;
-            }
         }
-
-        private Vector3 GetArrowStartPosition(ArrowView arrow)
-        {
-            switch (arrow.Direction)
-            {
-                case ArrowDirection.Up:
-                    return arrow.transform.position - Vector3.up * 0.5f;
-                case ArrowDirection.Down:
-                    return arrow.transform.position - Vector3.down * 0.5f;
-                case ArrowDirection.Left:
-                    return arrow.transform.position - Vector3.left * 0.5f;
-                case ArrowDirection.Right:
-                    return arrow.transform.position - Vector3.right * 0.5f;
-                default:
-                    return arrow.transform.position;
-            }
-        }
-
 
     }
 
+
+    public enum GameType
+    {
+        Sequencing,
+        Looping
+    }
 }
 

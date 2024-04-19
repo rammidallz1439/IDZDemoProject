@@ -33,8 +33,9 @@ namespace IDZ
                 formatter.Serialize(fileStream, content);
             }
         }
-        public void Load<T>(T data, string fileName)
+        public T Load<T>(string fileName)
         {
+            T data = default(T);
             string dathPath = Application.persistentDataPath;
             string filePath = Path.Combine(dathPath, fileName);
             if (Directory.Exists(dathPath))
@@ -47,15 +48,13 @@ namespace IDZ
                     fileStream.Close();
                 }
 
-
-
             }
             else
             {
                 Directory.CreateDirectory(dathPath);
                 Debug.LogWarning("Save file not found. Using default values.");
             }
-
+            return data;
         }
     }
 }

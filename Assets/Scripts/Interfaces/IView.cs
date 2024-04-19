@@ -5,7 +5,8 @@ namespace IDZ.Game
 {
     public interface IView 
     {
-        void Initialize(SequencingController controller);
+        public void Initialize(SequencingController controller);
+  
     }
 }
 

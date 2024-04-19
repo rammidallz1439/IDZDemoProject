@@ -7,22 +7,43 @@ namespace IDZ.Game
     {
         private SequencingController controller;
         public bool filled;
-    
+
         public void Initialize(SequencingController controller)
         {
             this.controller = controller;
         }
-
         public void OnDrop(PointerEventData eventData)
         {
-            ArrowView arrow = eventData.pointerDrag.GetComponent<ArrowView>();
-            if (arrow != null)
+            if (controller.gameType == GameType.Sequencing)
             {
-                filled=true;
-                eventData.pointerDrag.GetComponent<RectTransform>().position=arrow.originalPos;
-                GameObject go=Instantiate(arrow.gameObject,transform);
-                controller.OnArrowDropped(go.GetComponent<ArrowView>(), this);
+                ArrowView arrow = eventData.pointerDrag.GetComponent<ArrowView>();
+                if (!filled)
+                {
+
+                    if (arrow != null)
+                    {
+                        filled = true;
+
+                        GameObject go = Instantiate(arrow.gameObject, transform);
+                        controller.OnArrowDropped(go.GetComponent<ArrowView>(), this);
+                    }
+                }
+                eventData.pointerDrag.GetComponent<RectTransform>().position = arrow.originalPos;
+            }else if(controller.gameType == GameType.Looping)
+            {
+                if (!filled)
+                {
+           
+                    ArrowView arrow = eventData.pointerDrag.GetComponent<ArrowView>();
+                    LoopView loop=eventData.pointerDrag.GetComponent<LoopView>();
+                    if(loop != null)
+                    {
+                        LoopingViewHolder LoopView = Instantiate(controller.loopingviewPrefab.gameObject,this.transform).transform.GetComponent<LoopingViewHolder>();
+                        controller.loopViewHolders.Add(LoopView);
+                    }
+                }
             }
+         
         }
 
     }

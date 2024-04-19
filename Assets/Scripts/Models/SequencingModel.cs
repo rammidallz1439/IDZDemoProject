@@ -37,7 +37,6 @@ namespace IDZ.Game
         {
             if (sequence.Count != goalSequence.Count)
                 return false;
-
             for (int i = 0; i < sequence.Count; i++)
             {
                 if (sequence[i] != goalSequence[i])
