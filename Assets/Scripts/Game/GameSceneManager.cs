@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace IDZ.Game
 {
@@ -24,14 +25,22 @@ namespace IDZ.Game
         {
             selectedGameIndex = DataManager.Instance.Load<int>(GameConstants.SelectedGameIndex);
             currentObj = Instantiate(gameSets[selectedGameIndex], canvas.transform);
+           
 
         }
         private void OnEnable()
         {
             SwitchNextButtonevent += SwitchnextButton;
             ResultPopupEvent += OpenResultPopup;
+          
         }
-
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape)) 
+            {
+                Application.Quit();
+            }
+        }
         private void SwitchnextButton()
         {
           
@@ -60,26 +69,32 @@ namespace IDZ.Game
 
         public void OnNextButton()
         {
-           
+         
+            selectedGameIndex = DataManager.Instance.Load<int>(GameConstants.SelectedGameIndex);
             Destroy(currentObj);
-            if(selectedGameIndex  < 1)
+            if(selectedGameIndex < 1)
             {
                 currentObj = Instantiate(gameSets[selectedGameIndex + 1], canvas.transform);
-
+                selectedGameIndex++;
+                DataManager.Instance.SaveData(selectedGameIndex, GameConstants.SelectedGameIndex);
             }
             else
             {
+                currentObj = Instantiate(gameSets[0], canvas.transform);
                 selectedGameIndex = 0;
-                currentObj = Instantiate(gameSets[selectedGameIndex ], canvas.transform);
                 DataManager.Instance.SaveData(selectedGameIndex, GameConstants.SelectedGameIndex);
             }
-   
+      
+           
+
             resultPanel.SetActive(false );
         }
         public void OnResetButton()
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
+
+      
     }
 }
 

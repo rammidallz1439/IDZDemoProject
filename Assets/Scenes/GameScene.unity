@@ -428,6 +428,7 @@ MonoBehaviour:
   nextButton: {fileID: 1849998890}
   resultPanel: {fileID: 249642751}
   resultText: {fileID: 1159687578}
+  backButton: {fileID: 0}
 --- !u!4 &354993436
 Transform:
   m_ObjectHideFlags: 0

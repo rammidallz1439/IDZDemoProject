@@ -1,4 +1,5 @@
 // ArrowView.cs
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -13,9 +14,9 @@ namespace IDZ.Game
         public ArrowDirection Direction => direction;
         public bool isSelected;
 
-        private RectTransform rectTransform;
-        private CanvasGroup canvasGroup;
-        private Canvas mainCanvas;
+        [SerializeField] private RectTransform rectTransform;
+        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private Canvas mainCanvas;
 
         void Start()
         {
@@ -63,21 +64,16 @@ namespace IDZ.Game
                     {
                         if (item.filled)
                         {
-                            if (item.transform.childCount > 0)
-                            {
-                                controller.model.AddToSequence(item.transform.GetChild(0).transform.GetComponent<ArrowView>().Direction);
-                            }
-                            else
+                            if (item.transform.childCount <= 0)
                             {
                                 item.filled = false;
                             }
-
-
+             
                         }
 
                     }
                 }
-                else
+                else if (controller.gameType == GameType.Looping)
                 {
 
                     foreach (LoopingViewHolder item in controller.loopViewHolders)
@@ -92,7 +88,7 @@ namespace IDZ.Game
                             {
                                 item.filled = false;
                                 item.ChangeAnimationStates(item.anim, GameConstants.LoopHolderIdleAnim);
-    }
+                            }
                         }
                     }
 

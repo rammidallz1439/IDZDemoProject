@@ -15,7 +15,13 @@ namespace IDZ.Game
             Debug.Log(index);
         }
 
-
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
+        }
     }
 }
 

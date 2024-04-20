@@ -5,6 +5,7 @@ using DG;
 using DG.Tweening;
 using System.Collections;
 using System;
+using UnityEngine.SceneManagement;
 namespace IDZ.Game
 {
     public class SequencingController : MonoBehaviour
@@ -24,7 +25,6 @@ namespace IDZ.Game
         private List<ICommand> commandBuffer = new List<ICommand>();
         [SerializeField] private Transform[] puzzleDots;
         [SerializeField] private int currentIndex;
-        [SerializeField] private int loopsToWin = 0;
         [SerializeField] private GameObject loopingHolder = null;
 
         void OnEnable()
@@ -32,7 +32,7 @@ namespace IDZ.Game
             model = new SequencingModel();
             ((SequencingModel)model).SetGoalSequence(goalSequence);
             InitializeViews();
-
+            pencilUI.transform.position = puzzleDots[currentIndex].transform.position;
         }
 
         private void InitializeViews()
@@ -89,7 +89,28 @@ namespace IDZ.Game
                     }
                   
                 }
+
+            }
+            else
+            {
                
+                foreach (SlotView item in slots)
+                {
+                    if (item.filled)
+                    {
+                        if (item.transform.childCount > 0)
+                        {
+                            model.AddToSequence(item.transform.GetChild(0).transform.GetComponent<ArrowView>().Direction);
+                        }
+                        else
+                        {
+                            item.filled = false;
+                        }
+
+
+                    }
+
+                }
             }
 
             StartCoroutine(MovePencil());
@@ -108,7 +129,7 @@ namespace IDZ.Game
             arrow.transform.SetParent(slot.transform);
             ICommand command = new AddArrowToSlotCommand(arrow, slot);
             ExecuteCommand(command);
-            model.AddToSequence(arrow.Direction);
+        //    model.AddToSequence(arrow.Direction);
         }
         private IEnumerator MovePencil()
         {
@@ -163,6 +184,11 @@ namespace IDZ.Game
             lineRenderer.SetPosition(1, endPos);
 
         }
+        public void OnBackButton()
+        {
+            SceneManager.LoadScene(0);
+        }
+
 
     }
 
